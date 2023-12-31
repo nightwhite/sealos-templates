@@ -7,6 +7,7 @@ spec:
   author: '白夜'
   description: '一键新建桌面快捷方式，运行本应用不会产生费用'
   icon: 'https://oss.laf.run/j4vo9u-ico/logo.png'
+  readme: 'https://raw.githubusercontent.com/nightwhite/own-sealos-templates/main/oneStepShortcuts/README.md'
   templateType: inline
   defaults:
     app_name:
