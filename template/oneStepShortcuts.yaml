@@ -1,7 +1,7 @@
 apiVersion: app.sealos.io/v1
 kind: Template
 metadata:
-  name: 一键新建桌面快捷方式
+  name: oneStepShortcuts
 spec:
   title: '一键新建桌面快捷方式'
   author: '白夜'
