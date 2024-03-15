@@ -9,8 +9,10 @@ spec:
   author: 'Sealos'
   description: '强大易用的开源建站工具。'
   readme: 'https://raw.githubusercontent.com/halo-dev/halo/main/README.md'
-  icon: 'https://raw.githubusercontent.com/halo-dev/halo/main/console/src/assets/logo.png'
+  icon: 'https://www.halo.run/logo'
   templateType: inline
+  categories:
+    - blog
   defaults:
     app_host:
       # number or string.
@@ -19,25 +21,26 @@ spec:
     app_name:
       type: string
       value: halo-${{ random(8) }}
-  inputs:
-    admin_username:
-      description: 'Halo Super Admin Username'
-      type: string
-      default: 'admin'
-      required: false
-    admin_password:
-      description: 'Halo Super Admin Password'
-      type: string
-      default: 'admin'
-      required: false
 
 ---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    sealos-db-provider-cr: ${{ defaults.app_name }}-pg
+    app.kubernetes.io/instance: ${{ defaults.app_name }}-pg
+    app.kubernetes.io/managed-by: kbcli
+  name: ${{ defaults.app_name }}-pg
+
+---
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: ${{ defaults.app_name }}
   annotations:
-    originImageName: halohub/halo:2.5
+    originImageName: halohub/halo:2.11
     deploy.cloud.sealos.io/minReplicas: '1'
     deploy.cloud.sealos.io/maxReplicas: '1'
   labels:
@@ -59,7 +62,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: ${{ defaults.app_name }}
-          image: halohub/halo:2.5
+          image: halohub/halo:2.11
           env:
             - name: PG_PASSWORD
               valueFrom:
@@ -77,10 +80,6 @@ spec:
               value: $PG_PASSWORD
             - name: halo.external-url
               value: ${{ defaults.app_host }}.${{ SEALOS_CLOUD_DOMAIN }}
-            - name: halo.security.initializer.superadminusername
-              value: ${{ inputs.admin_username }}
-            - name: halo.security.initializer.superadminpassword
-              value: ${{ inputs.admin_password }}
           resources:
             requests:
               cpu: 100m
@@ -96,6 +95,13 @@ spec:
           volumeMounts:
             - name: vn-rootvn-vn-halo2
               mountPath: /root/.halo2
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8090
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 15
       volumes: []
   volumeClaimTemplates:
     - metadata:
@@ -211,16 +217,7 @@ spec:
   terminationPolicy: Delete
   tolerations: []
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    sealos-db-provider-cr: ${{ defaults.app_name }}-pg
-    app.kubernetes.io/instance: ${{ defaults.app_name }}-pg
-    app.kubernetes.io/managed-by: kbcli
-  name: ${{ defaults.app_name }}-pg
 
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -270,6 +267,30 @@ rules:
       - patch
       - update
       - watch
+  - apiGroups:
+      - dataprotection.kubeblocks.io
+    resources:
+      - backups
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
+  - apiGroups:
+      - dataprotection.kubeblocks.io
+    resources:
+      - backups/status
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1

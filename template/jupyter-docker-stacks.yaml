@@ -11,6 +11,8 @@ spec:
   readme: 'https://raw.githubusercontent.com/jupyter/docker-stacks/main/README.md'
   icon: 'https://raw.githubusercontent.com/jupyter/docker-stacks/main/docs/_static/jupyter-logo.svg'
   templateType: inline
+  categories:
+    - tool
   defaults:
     app_host:
       # number or string.
@@ -26,7 +28,7 @@ kind: Deployment
 metadata:
   name: ${{ defaults.app_name }}
   annotations:
-    originImageName: jupyter/scipy-notebook:2023-11-17
+    originImageName: jupyter/scipy-notebook:latest
     deploy.cloud.sealos.io/minReplicas: '1'
     deploy.cloud.sealos.io/maxReplicas: '1'
   labels:
@@ -50,7 +52,7 @@ spec:
     spec:
       containers:
         - name: ${{ defaults.app_name }}
-          image: jupyter/scipy-notebook:2023-11-17
+          image: jupyter/scipy-notebook
           env: []
           resources:
             requests:

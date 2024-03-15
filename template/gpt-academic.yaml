@@ -11,6 +11,8 @@ spec:
   readme: 'https://raw.githubusercontent.com/binary-husky/gpt_academic/master/README.md'
   icon: 'https://raw.githubusercontent.com/binary-husky/gpt_academic/master/docs/logo.png'
   templateType: inline
+  categories:
+    - ai
   defaults:
     app_host:
       # number or string..
@@ -28,7 +30,7 @@ spec:
     API_URL_REDIRECT:
       description: '重新URL重新定向，实现更换API_URL的作用'
       type: string
-      default: '{"https://api.openai.com/v1/chat/completions": "https://reverse-proxy-url/v1/chat/completions"}'
+      default: ''
       required: false
     LLM_MODEL:
       description: '模型选择'

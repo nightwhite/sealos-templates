@@ -11,6 +11,8 @@ spec:
   readme: 'https://raw.githubusercontent.com/labring/FastGPT/main/README.md'
   icon: 'https://raw.githubusercontent.com/labring/FastGPT/main/.github/imgs/logo.svg'
   templateType: inline
+  categories:
+    - ai
   defaults:
     app_name:
       type: string
@@ -50,6 +52,18 @@ spec:
       required: true
 
 ---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    sealos-db-provider-cr: ${{ defaults.app_name }}-mongo
+    app.kubernetes.io/instance: ${{ defaults.app_name }}-mongo
+    app.kubernetes.io/managed-by: kbcli
+  name: ${{ defaults.app_name }}-mongo
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -115,6 +129,8 @@ spec:
               value: AI
             - name: SYSTEM_FAVICON
               value: /favicon.ico
+            - name: PRO_URL
+              value: http://${{ defaults.app_name }}-pro.${{ SEALOS_NAMESPACE }}.svc.cluster.local:3000
           resources:
             requests:
               cpu: 50m
@@ -127,34 +143,8 @@ spec:
           ports:
             - containerPort: 3000
           imagePullPolicy: Always
-          volumeMounts:
-            - name: vn-appvn-datavn-configvn-json
-              mountPath: /app/data/config.json
-              subPath: ./app/data/config.json
-      volumes:
-        - name: vn-appvn-datavn-configvn-json
-          configMap:
-            name: ${{ defaults.app_name }}
-            items:
-              - key: vn-appvn-datavn-configvn-json
-                path: ./app/data/config.json
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ${{ defaults.app_name }}
-data:
-  vn-appvn-datavn-configvn-json: |
-    {
-      "systemEnv": {
-        "pluginBaseUrl": "http://${{ defaults.app_name }}-pro.${{ SEALOS_NAMESPACE }}.svc.cluster.local:3000/api",
-        "openapiPrefix": "openapi",
-        "vectorMaxProcess": 15,
-        "qaMaxProcess": 10,
-        "pgHNSWEfSearch": 100
-      }
-    }
+          volumeMounts: []
+      volumes: []
 
 ---
 apiVersion: v1
@@ -398,16 +388,7 @@ spec:
   tolerations: []
 
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    sealos-db-provider-cr: ${{ defaults.app_name }}-mongo
-    app.kubernetes.io/instance: ${{ defaults.app_name }}-mongo
-    app.kubernetes.io/managed-by: kbcli
-  name: ${{ defaults.app_name }}-mongo
 
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -496,16 +477,7 @@ spec:
   tolerations: []
 
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    sealos-db-provider-cr: ${{ defaults.app_name }}-pg
-    app.kubernetes.io/instance: ${{ defaults.app_name }}-pg
-    app.kubernetes.io/managed-by: kbcli
-  name: ${{ defaults.app_name }}-pg
 
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -555,6 +527,30 @@ rules:
       - patch
       - update
       - watch
+  - apiGroups:
+      - dataprotection.kubeblocks.io
+    resources:
+      - backups
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
+  - apiGroups:
+      - dataprotection.kubeblocks.io
+    resources:
+      - backups/status
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
